@@ -2,27 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\User\storeUserLastLoginAction;
 use App\Models\User;
-use App\Models\UserSocialMedia;
-use App\TokenStore\TokenCache;
 use Auth;
+use Carbon\Carbon;
 use DB;
-use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
-use League\OAuth2\Client\Provider\GenericProvider;
-use Microsoft\Graph\Exception\GraphException;
-use Microsoft\Graph\Graph;
 use Socialite;
 
 class SocialMediaController extends Controller
 {
+    /**
+     * @param $provider_type
+     * @return mixed
+     */
     public function providerRedirect($provider_type)
     {
         return Socialite::driver($provider_type)->redirect();
     }
 
+    /**
+     * @param $provider_type
+     * @return RedirectResponse
+     */
     public function providerCallback($provider_type): RedirectResponse
     {
         $socialiteUser = Socialite::driver($provider_type)->user();
@@ -38,6 +40,7 @@ class SocialMediaController extends Controller
                 "name" => $socialiteUser->getName(),
                 "email" => $socialiteUser->getEmail(),
                 "password" => \Hash::make(\Str::random(100)),
+                "email_verified_at" => Carbon::now(),
             ]), function (User $user) use ($provider_type, $socialiteUser) {
                 $user->socialMediaProvider()->create([
                     "provider_type" => $provider_type,
@@ -47,73 +50,7 @@ class SocialMediaController extends Controller
                 Auth::loginUsingId($user->id);
             });
         }
+        storeUserLastLoginAction::execute();
         return redirect()->route("home");
-    }
-
-    public function signin()
-    {
-        $oauthClient = new GenericProvider([
-            'clientId' => config('azure.appId'),
-            'clientSecret' => config('azure.appSecret'),
-            'redirectUri' => config('azure.redirectUri'),
-            'urlAuthorize' => config('azure.authority') . config('azure.authorizeEndpoint'),
-            'urlAccessToken' => config('azure.authority') . config('azure.tokenEndpoint'),
-            'urlResourceOwnerDetails' => '',
-            'scopes' => config('azure.scopes')
-        ]);
-        $authUrl = $oauthClient->getAuthorizationUrl();
-        session(['oauthState' => $oauthClient->getState()]);
-        return redirect()->away($authUrl);
-    }
-
-    /**
-     * @throws GuzzleException
-     * @throws GraphException
-     */
-    public function callback(Request $request)
-    {
-        $expectedState = session('oauthState');
-        $request->session()->forget('oauthState');
-        $providedState = $request->query('state');
-        if (!isset($expectedState)) {
-            return redirect('/register');
-        }
-        if (!isset($providedState) || $expectedState != $providedState) {
-            return redirect('/')
-                ->with('error', 'Invalid auth state')
-                ->with('errorDetail', 'The provided auth state did not match the expected value');
-        }
-        $authCode = $request->query('code');
-        if (isset($authCode)) {
-            $oauthClient = new GenericProvider([
-                'clientId' => config('azure.appId'),
-                'clientSecret' => config('azure.appSecret'),
-                'redirectUri' => config('azure.redirectUri'),
-                'urlAuthorize' => config('azure.authority') . config('azure.authorizeEndpoint'),
-                'urlAccessToken' => config('azure.authority') . config('azure.tokenEndpoint'),
-                'urlResourceOwnerDetails' => '',
-                'scopes' => config('azure.scopes')
-            ]);
-            try {
-                $accessToken = $oauthClient->getAccessToken('authorization_code', ['code' => $authCode]);
-                $graph = new Graph();
-                $graph->setAccessToken($accessToken->getToken());
-                $user = $graph->createRequest('GET', '/me?$select=displayName,mail,mailboxSettings,userPrincipalName')->setReturnType(User::class)->execute();
-                $tokenCache = new TokenCache();
-                $tokenCache->storeTokens($accessToken, $user);
-            } catch (IdentityProviderException $e) {
-                return redirect('/')
-                    ->with('error', 'Error requesting access token')
-                    ->with('errorDetail', json_encode($e->getResponseBody()));
-            }
-        }
-        return redirect('/');
-    }
-
-    public function signout()
-    {
-        $tokenCache = new TokenCache();
-        $tokenCache->clearTokens();
-        return redirect('/');
     }
 }

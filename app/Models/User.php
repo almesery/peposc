@@ -50,4 +50,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserSocialMedia::class, 'user_id');
     }
+
+    public function last_logins()
+    {
+        return $this->hasMany(LastLogin::class, 'user_id');
+    }
 }

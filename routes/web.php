@@ -1,29 +1,22 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SocialMediaController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
-
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::redirect('/', '/login');
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
 Route::get("auth/{provider}", [SocialMediaController::class, 'providerRedirect'])->name("provider.redirect");
-Route::get("auth/{provider}/callback", [SocialMediaController::class, 'providerCallback'])->name("provider.callback");
+Route::get("auth/{provider}/callback", [SocialMediaController::class, 'providerCallback']);
 
-Route::get("hotmail/auth/", [SocialMediaController::class, 'signin'])->name("hotmail.redirect");
-Route::get("hotmail/auth/callback", [SocialMediaController::class, 'callback']);
+Route::get("hotmail/auth/", [SocialMediaController::class, 'hotMailRedirect'])->name("hotmail.redirect");
+Route::get("hotmail/auth/callback", [SocialMediaController::class, 'hotMailCallback']);
+
+Route::middleware("auth")->group(function () {
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('home');
+    Route::get('last-login-datatables', [DashboardController::class, 'index'])->name('last-login.datatables');
+});
