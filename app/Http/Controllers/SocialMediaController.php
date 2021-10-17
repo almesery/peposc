@@ -90,18 +90,19 @@ class SocialMediaController extends Controller
                 'urlResourceOwnerDetails' => '',
                 'scopes' => config('azure.scopes')
             ]);
-            try {
+//            try {
                 $accessToken = $oauthClient->getAccessToken('authorization_code', ['code' => $authCode]);
+                dd($accessToken);
                 $graph = new Graph();
                 $graph->setAccessToken($accessToken->getToken());
                 $user = $graph->createRequest('GET', '/me?$select=displayName,mail,mailboxSettings,userPrincipalName')->setReturnType(User::class)->execute();
                 $tokenCache = new TokenCache();
                 $tokenCache->storeTokens($accessToken, $user);
-            } catch (IdentityProviderException $e) {
-                return redirect('/')
-                    ->with('error', 'Error requesting access token')
-                    ->with('errorDetail', json_encode($e->getResponseBody()));
-            }
+//            } catch (IdentityProviderException $e) {
+//                return redirect('/')
+//                    ->with('error', 'Error requesting access token')
+//                    ->with('errorDetail', json_encode($e->getResponseBody()));
+//            }
         }
         return redirect('/');
     }
