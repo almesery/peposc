@@ -51,8 +51,16 @@ class User extends Authenticatable
         return $this->hasMany(UserSocialMedia::class, 'user_id');
     }
 
-    public function lastLogins()
+    /**
+     * @return HasMany
+     */
+    public function lastLogins(): HasMany
     {
         return $this->hasMany(LastLogin::class, 'user_id');
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->is_admin;
     }
 }
