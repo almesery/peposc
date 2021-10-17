@@ -10,7 +10,7 @@ use Exception;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 
-class DashboardController extends Controller
+class UsersController extends Controller
 {
     /**
      * Create a new controller instance.
@@ -42,6 +42,6 @@ class DashboardController extends Controller
                 })
                 ->make(true);
         }
-        return view('home');
+        return view('user.index');
     }
 }
