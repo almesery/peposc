@@ -3,7 +3,7 @@
 @section('content')
     <div class="container-fluid">
         <div class="row justify-content-center">
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">{{ __('Last Login Details') }}</div>
                     <div class="card-body">
@@ -28,7 +28,7 @@
         $('.datatables').DataTable({
             serverSide: true,
             processing: true,
-            ajax: "{{route("last-login.datatables")}}",
+            ajax: "{{route("home")}}",
             columns: [
                 {name: "id", data: "id"},
                 {name:"ip_address", data: "ip_address"},

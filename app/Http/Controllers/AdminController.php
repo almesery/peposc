@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helper\getLastLoginForEachUser;
 use App\Models\User;
+use DB;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -24,9 +25,23 @@ class AdminController extends Controller
     public function index(Request $request)
     {
         if ($request->wantsJson()) {
-            $users = \DB::table("users")->select("*");
+            $users = DB::table("users")
+                ->where("users.id", "!=", 1)
+                ->select(
+                    "users.*",
+                    DB::raw("(SELECT created_at FROM last_logins WHERE last_logins.user_id = users.id ORDER BY id desc limit 1) as userLastLogin")
+                );
             return datatables()
                 ->of($users)
+                ->addColumn("last_login_date", function ($user) {
+                    return $user->userLastLogin;
+                })
+                ->addColumn("actions", function ($user) {
+                    return view("admin.actions")->with([
+                        "user" => $user
+                    ]);
+                })
+                ->rawColumns(['actions'])
                 ->make(true);
         }
         return view("admin.index");
@@ -46,7 +61,9 @@ class AdminController extends Controller
         if ($request->expectsJson()) {
             return $getLastLoginForEachUser->execute($user->id);
         }
-        return \view("admin.show");
+        return \view("admin.show")->with([
+            "user" => $user,
+        ]);
     }
 
     /**
@@ -65,21 +82,6 @@ class AdminController extends Controller
         return \response()->json([
             "success" => true,
             "message" => "User Deleted Successfully"
-        ]);
-    }
-
-    public function updateStatus(Request $request, User $user)
-    {
-        try {
-            $user->update([
-                "is_active" => $user->is_active == 0 ? 1 : 0,
-            ]);
-        } catch (Exception $exception) {
-            Log::error($exception->getMessage());
-        }
-        return \response()->json([
-            "success" => true,
-            "message" => "User Status Successfully"
         ]);
     }
 }

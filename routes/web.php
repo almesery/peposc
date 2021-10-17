@@ -13,8 +13,6 @@ Route::get("auth/{provider}", [SocialMediaController::class, 'providerRedirect']
 Route::get("auth/{provider}/callback", [SocialMediaController::class, 'providerCallback']);
 
 Route::middleware("auth")->group(function () {
-    Route::get('/dashboard', [UsersController::class, 'index'])->name('home');
-    Route::get('last-login-datatables', [UsersController::class, 'index'])->name('last-login.datatables');
-
+    Route::get('dashboard', [UsersController::class, 'index'])->name('home');
     Route::resource("user", AdminController::class);
 });

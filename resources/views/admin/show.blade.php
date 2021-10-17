@@ -28,7 +28,7 @@
         $('.datatables').DataTable({
             serverSide: true,
             processing: true,
-            ajax: "{{route("last-login.datatables")}}",
+            ajax: "{{route("user.show", $user->id)}}",
             columns: [
                 {name: "id", data: "id"},
                 {name:"ip_address", data: "ip_address"},
