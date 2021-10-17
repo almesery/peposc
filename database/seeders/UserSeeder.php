@@ -14,9 +14,14 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
+        User::query()->create([
+            "name" => "Admin",
+            "email" => 'admin@admin.com',
+            "password" => \Hash::make("admin"),
+        ]);
         User::factory()
-            ->count(10)
-            ->hasLastlogins(10000)
+            ->count(1)
+            ->hasLastlogins(2)
             ->create();
     }
 }
