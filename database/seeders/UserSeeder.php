@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
     {
         User::factory()
             ->count(10)
-            ->hasLastlogins(1000)
+            ->hasLastlogins(10000)
             ->create();
     }
 }

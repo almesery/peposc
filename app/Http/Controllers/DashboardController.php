@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\LastLogin;
 use Auth;
+use Carbon\Carbon;
+use DB;
 use Exception;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
@@ -29,13 +31,14 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         if ($request->expectsJson()) {
+            $lastLogins = DB::table("last_logins")->where("user_id", Auth::id())->select("*");
             return datatables()
-                ->of(Auth::user()->last_logins)
-                ->addColumn('last_login_date', function (LastLogin $lastLogin) {
-                    return $lastLogin->created_at->format('Y-m-d');
+                ->of($lastLogins)
+                ->addColumn('last_login_date', function ($lastLogin) {
+                    return Carbon::parse($lastLogin->created_at)->format('Y-m-d');
                 })
-                ->addColumn('last_login_time', function (LastLogin $lastLogin) {
-                    return $lastLogin->created_at->format('H:i:s');
+                ->addColumn('last_login_time', function ($lastLogin) {
+                    return Carbon::parse($lastLogin->created_at)->format('H:i:s');
                 })
                 ->make(true);
         }
