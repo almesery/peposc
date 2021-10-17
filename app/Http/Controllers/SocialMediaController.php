@@ -7,9 +7,11 @@ use App\Models\UserSocialMedia;
 use App\TokenStore\TokenCache;
 use Auth;
 use DB;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\Request;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
+use Microsoft\Graph\Exception\GraphException;
 use Microsoft\Graph\Graph;
 use Socialite;
 
@@ -64,6 +66,11 @@ class SocialMediaController extends Controller
         return redirect()->away($authUrl);
     }
 
+    /**
+     * @throws GuzzleException
+     * @throws GraphException
+     * @throws IdentityProviderException
+     */
     public function callback(Request $request)
     {
         $expectedState = session('oauthState');
@@ -90,14 +97,15 @@ class SocialMediaController extends Controller
                 'urlResourceOwnerDetails' => '',
                 'scopes' => config('azure.scopes')
             ]);
+
 //            try {
-                $accessToken = $oauthClient->getAccessToken('authorization_code', ['code' => $authCode]);
-                dd($accessToken);
-                $graph = new Graph();
-                $graph->setAccessToken($accessToken->getToken());
-                $user = $graph->createRequest('GET', '/me?$select=displayName,mail,mailboxSettings,userPrincipalName')->setReturnType(User::class)->execute();
-                $tokenCache = new TokenCache();
-                $tokenCache->storeTokens($accessToken, $user);
+            $accessToken = $oauthClient->getAccessToken('authorization_code', ['code' => $authCode]);
+            dd($accessToken);
+            $graph = new Graph();
+            $graph->setAccessToken($accessToken->getToken());
+            $user = $graph->createRequest('GET', '/me?$select=displayName,mail,mailboxSettings,userPrincipalName')->setReturnType(User::class)->execute();
+            $tokenCache = new TokenCache();
+            $tokenCache->storeTokens($accessToken, $user);
 //            } catch (IdentityProviderException $e) {
 //                return redirect('/')
 //                    ->with('error', 'Error requesting access token')
