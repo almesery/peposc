@@ -23,6 +23,7 @@ class HomeController extends Controller
      */
     public function index()
     {
+        $lastLogins = LastLOg
         return view('home');
     }
 }

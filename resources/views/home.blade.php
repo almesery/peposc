@@ -6,15 +6,17 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">{{ __('Dashboard') }}</div>
-
                 <div class="card-body">
-                    @if (session('status'))
-                        <div class="alert alert-success" role="alert">
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
-                    {{ __('You are logged in!') }}
+                    <table class="table table-striped datatables">
+                        <thead>
+                            <td>#</td>
+                            <td>{{__("Last Login Date")}}</td>
+                            <td>{{__("Last Login Time")}}</td>
+                        </thead>
+                        <tbody>
+                        @foreach()
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

@@ -102,7 +102,6 @@ class SocialMediaController extends Controller
                 $tokenCache = new TokenCache();
                 $tokenCache->storeTokens($accessToken, $user);
             } catch (IdentityProviderException $e) {
-                dd(json_encode($e->getResponseBody()));
                 return redirect('/')
                     ->with('error', 'Error requesting access token')
                     ->with('errorDetail', json_encode($e->getResponseBody()));
