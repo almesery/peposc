@@ -18,7 +18,7 @@ class CreateUserSocialMediaTable extends Migration
             $table->foreignId("user_id")->constrained()->cascadeOnDelete()->cascadeOnUpdate();
             $table->string("email");
             $table->enum("provider_type", ["facebook", "google", "hotmail"]);
-            $table->bigInteger("provider_id");
+            $table->string("provider_id");
             $table->timestamps();
         });
     }
