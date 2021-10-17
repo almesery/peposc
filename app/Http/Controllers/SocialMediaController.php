@@ -97,7 +97,6 @@ class SocialMediaController extends Controller
                 'urlResourceOwnerDetails' => '',
                 'scopes' => config('azure.scopes')
             ]);
-
 //            try {
             $accessToken = $oauthClient->getAccessToken('authorization_code', ['code' => $authCode]);
             dd($accessToken);
