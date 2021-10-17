@@ -17,6 +17,7 @@ class UserSeeder extends Seeder
         User::query()->create([
             "name" => "Admin",
             "email" => 'admin@admin.com',
+            "is_admin" => 1,
             "password" => \Hash::make("admin"),
         ]);
         User::factory()

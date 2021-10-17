@@ -14,5 +14,5 @@ Route::get("auth/{provider}/callback", [SocialMediaController::class, 'providerC
 
 Route::middleware("auth")->group(function () {
     Route::get('dashboard', [UsersController::class, 'index'])->name('home');
-    Route::resource("user", AdminController::class);
+    Route::resource("user", AdminController::class)->middleware("admin");
 });
