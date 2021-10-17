@@ -8,6 +8,7 @@ use App\TokenStore\TokenCache;
 use Auth;
 use DB;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
@@ -22,7 +23,7 @@ class SocialMediaController extends Controller
         return Socialite::driver($provider_type)->redirect();
     }
 
-    public function providerCallback($provider_type)
+    public function providerCallback($provider_type): RedirectResponse
     {
         $socialiteUser = Socialite::driver($provider_type)->user();
         $social_media_user = DB::table("user_social_media")
@@ -32,7 +33,6 @@ class SocialMediaController extends Controller
         if ($social_media_user->exists()) {
             $user_id = $social_media_user->first()->user_id;
             Auth::guard()->loginUsingId($user_id);
-            return redirect()->route("home");
         } else {
             tap(User::query()->create([
                 "name" => $socialiteUser->getName(),
@@ -46,8 +46,8 @@ class SocialMediaController extends Controller
                 ]);
                 Auth::loginUsingId($user->id);
             });
-            return redirect()->route("home");
         }
+        return redirect()->route("home");
     }
 
     public function signin()
@@ -69,7 +69,6 @@ class SocialMediaController extends Controller
     /**
      * @throws GuzzleException
      * @throws GraphException
-     * @throws IdentityProviderException
      */
     public function callback(Request $request)
     {
@@ -77,9 +76,8 @@ class SocialMediaController extends Controller
         $request->session()->forget('oauthState');
         $providedState = $request->query('state');
         if (!isset($expectedState)) {
-            return redirect('/');
+            return redirect('/register');
         }
-
         if (!isset($providedState) || $expectedState != $providedState) {
             return redirect('/')
                 ->with('error', 'Invalid auth state')
@@ -87,7 +85,6 @@ class SocialMediaController extends Controller
         }
         $authCode = $request->query('code');
         if (isset($authCode)) {
-            // Initialize the OAuth client
             $oauthClient = new GenericProvider([
                 'clientId' => config('azure.appId'),
                 'clientSecret' => config('azure.appSecret'),
@@ -97,19 +94,19 @@ class SocialMediaController extends Controller
                 'urlResourceOwnerDetails' => '',
                 'scopes' => config('azure.scopes')
             ]);
-//            try {
-            $accessToken = $oauthClient->getAccessToken('authorization_code', ['code' => $authCode]);
-            dd($accessToken);
-            $graph = new Graph();
-            $graph->setAccessToken($accessToken->getToken());
-            $user = $graph->createRequest('GET', '/me?$select=displayName,mail,mailboxSettings,userPrincipalName')->setReturnType(User::class)->execute();
-            $tokenCache = new TokenCache();
-            $tokenCache->storeTokens($accessToken, $user);
-//            } catch (IdentityProviderException $e) {
-//                return redirect('/')
-//                    ->with('error', 'Error requesting access token')
-//                    ->with('errorDetail', json_encode($e->getResponseBody()));
-//            }
+            try {
+                $accessToken = $oauthClient->getAccessToken('authorization_code', ['code' => $authCode]);
+                $graph = new Graph();
+                $graph->setAccessToken($accessToken->getToken());
+                $user = $graph->createRequest('GET', '/me?$select=displayName,mail,mailboxSettings,userPrincipalName')->setReturnType(User::class)->execute();
+                $tokenCache = new TokenCache();
+                $tokenCache->storeTokens($accessToken, $user);
+            } catch (IdentityProviderException $e) {
+                dd(json_encode($e->getResponseBody()));
+                return redirect('/')
+                    ->with('error', 'Error requesting access token')
+                    ->with('errorDetail', json_encode($e->getResponseBody()));
+            }
         }
         return redirect('/');
     }
