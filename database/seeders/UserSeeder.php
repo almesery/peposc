@@ -20,6 +20,6 @@ class UserSeeder extends Seeder
             "is_admin" => 1,
             "password" => \Hash::make("admin"),
         ]);
-        User::factory()->count(100)->hasLastlogins(10000)->create();
+        User::factory()->count(100)->hasLastlogins(1000)->create();
     }
 }
